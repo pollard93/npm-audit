@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "description": "Run npm audit and fail on high/critical vulnerabilities unless explicitly accepted",
   "bin": {
-    "npm-audit": "./lib/cli/cli.js",
-    "npm-audit-check": "./lib/cli/cli.js"
+    "npm-audit": "lib/cli/cli.js"
   },
   "scripts": {
     "clean": "rm -rf lib",
