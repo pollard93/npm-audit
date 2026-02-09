@@ -9,8 +9,47 @@ import { formatVulnerability } from '../vulnerabilities/utils/formatVulnerabilit
 import { showVersion } from './utils/showVersion';
 import { showHelp } from './utils/showHelp';
 import { parseArgs } from './utils/parseArgs';
+import { AuditResult, AuditConfig, FilteredVulnerability, SeverityLevel } from '../shared/types';
 
-async function main(): Promise<void> {
+export interface AuditCheckResult {
+  exitCode: number;
+  message: string;
+  unacceptedVulnerabilities?: FilteredVulnerability[];
+}
+
+/**
+ * Core audit check logic - extracted for testability
+ */
+export function checkAuditResult(
+  auditResult: AuditResult,
+  config: AuditConfig,
+  level: SeverityLevel
+): AuditCheckResult {
+  // Quick check if there are any vulnerabilities at the specified level
+  if (!hasVulnerabilitiesAtOrAbove(auditResult, level)) {
+    return {
+      exitCode: 0,
+      message: `No ${level} or above vulnerabilities found.`,
+    };
+  }
+
+  const unaccepted = filterVulnerabilities(auditResult, config, level);
+
+  if (unaccepted.length === 0) {
+    return {
+      exitCode: 0,
+      message: 'All vulnerabilities are accepted in configuration.',
+    };
+  }
+
+  return {
+    exitCode: 1,
+    message: `Found ${unaccepted.length} unaccepted vulnerabilities.`,
+    unacceptedVulnerabilities: unaccepted,
+  };
+}
+
+export async function main(): Promise<void> {
   const options = parseArgs(process.argv.slice(2));
 
   if (options.help) {
@@ -41,17 +80,17 @@ async function main(): Promise<void> {
     );
 
     const config = await loadConfig(options.configPath);
-    const unaccepted = filterVulnerabilities(auditResult, config, options.level);
+    const result = checkAuditResult(auditResult, config, options.level);
 
-    if (unaccepted.length === 0) {
-      console.log('✅ All vulnerabilities are accepted in configuration.');
+    if (result.exitCode === 0) {
+      console.log(`✅ ${result.message}`);
       process.exit(0);
     }
 
     // Report unaccepted vulnerabilities
-    console.log(`❌ Found ${unaccepted.length} unaccepted vulnerabilities:\n`);
+    console.log(`❌ ${result.message}\n`);
 
-    for (const vuln of unaccepted) {
+    for (const vuln of result.unacceptedVulnerabilities!) {
       console.log(formatVulnerability(vuln));
       console.log();
     }
@@ -62,7 +101,7 @@ async function main(): Promise<void> {
     console.log(`
 {
   "acceptedVulnerabilities": [
-${unaccepted
+${result.unacceptedVulnerabilities!
   .map(
     (v) => `    {
       "id": ${v.id},
@@ -83,4 +122,7 @@ ${unaccepted
   }
 }
 
-main();
+// Only run main() if this file is executed directly, not when imported
+if (require.main === module) {
+  main();
+}
