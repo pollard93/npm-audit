@@ -1,0 +1,11 @@
+{
+  "acceptedVulnerabilities": [
+    {
+      "id": 1234567,
+      "reason": "No fix available, mitigated by input validation in our application",
+      "acceptedBy": "engineer@example.com",
+      "acceptedAt": "2026-02-09T00:00:00.000Z",
+      "expiresAt": "2026-08-09T00:00:00.000Z"
+    }
+  ]
+}

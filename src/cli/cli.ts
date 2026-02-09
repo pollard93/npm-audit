@@ -1,0 +1,86 @@
+#!/usr/bin/env node
+
+import { runAudit } from '../audit/runAudit';
+import { filterVulnerabilities } from '../vulnerabilities/utils/filterVulnerabilities';
+import { hasVulnerabilitiesAtOrAbove } from '../vulnerabilities/utils/hasVulnerabilitiesAtOrAbove';
+import { loadConfig } from '../config/loadConfig';
+import { getDefaultConfigFilename } from '../config/utils/getDefaultConfigFilename';
+import { formatVulnerability } from '../vulnerabilities/utils/formatVulnerability';
+import { showVersion } from './utils/showVersion';
+import { showHelp } from './utils/showHelp';
+import { parseArgs } from './utils/parseArgs';
+
+async function main(): Promise<void> {
+  const options = parseArgs(process.argv.slice(2));
+
+  if (options.help) {
+    showHelp();
+    process.exit(0);
+  }
+
+  if (options.version) {
+    showVersion();
+    process.exit(0);
+  }
+
+  console.log('🔍 Running npm audit...\n');
+
+  try {
+    const auditResult = await runAudit();
+
+    // Quick check if there are any vulnerabilities at the specified level
+    if (!hasVulnerabilitiesAtOrAbove(auditResult, options.level)) {
+      console.log(`✅ No ${options.level} or above vulnerabilities found.`);
+      process.exit(0);
+    }
+
+    // Load config to check for accepted vulnerabilities
+    console.log(`⚠️  Found vulnerabilities at ${options.level} level or above.\n`);
+    console.log(
+      `📋 Loading accepted vulnerabilities from ${options.configPath || getDefaultConfigFilename()}...\n`
+    );
+
+    const config = await loadConfig(options.configPath);
+    const unaccepted = filterVulnerabilities(auditResult, config, options.level);
+
+    if (unaccepted.length === 0) {
+      console.log('✅ All vulnerabilities are accepted in configuration.');
+      process.exit(0);
+    }
+
+    // Report unaccepted vulnerabilities
+    console.log(`❌ Found ${unaccepted.length} unaccepted vulnerabilities:\n`);
+
+    for (const vuln of unaccepted) {
+      console.log(formatVulnerability(vuln));
+      console.log();
+    }
+
+    console.log(
+      `To accept these vulnerabilities, add them to ${options.configPath || getDefaultConfigFilename()}:`
+    );
+    console.log(`
+{
+  "acceptedVulnerabilities": [
+${unaccepted
+  .map(
+    (v) => `    {
+      "id": ${v.id},
+      "reason": "TODO: Add reason for accepting",
+      "acceptedBy": "your-email@example.com",
+      "acceptedAt": "${new Date().toISOString()}"
+    }`
+  )
+  .join(',\n')}
+  ]
+}
+`);
+
+    process.exit(1);
+  } catch (error) {
+    console.error(`\n❌ Error: ${(error as Error).message}`);
+    process.exit(1);
+  }
+}
+
+main();

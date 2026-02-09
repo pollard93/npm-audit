@@ -1,6 +1,6 @@
 # @ppoll/npm-audit
 
-A CLI tool that runs `npm audit` before installing dependencies and fails if there are any high or critical vulnerabilities, unless they are explicitly accepted in a configuration file.
+A CLI tool that runs `npm audit` and fails if there are any high or critical vulnerabilities, unless they are explicitly accepted in a configuration file. Designed for CI/CD pipelines to enforce security policies while allowing teams to acknowledge and track accepted risks.
 
 ## Installation
 
@@ -18,22 +18,23 @@ npm install --save-dev @ppoll/npm-audit
 
 ### CLI
 
-Instead of running `npm install`, run:
+Run the audit check:
 
 ```bash
-npm-audit-install
+npm-audit-check
 ```
 
 This will:
+
 1. Run `npm audit` to check for vulnerabilities
 2. If high or critical vulnerabilities are found, check against your accepted vulnerabilities config
-3. Fail if there are unaccepted high/critical vulnerabilities
-4. Run `npm install` if all checks pass
+3. Exit with code 0 if no issues or all issues are accepted
+4. Exit with code 1 if there are unaccepted high/critical vulnerabilities
 
 ### Options
 
 ```bash
-npm-audit-install [options]
+npm-audit-check [options]
 
 Options:
   --config, -c    Path to config file (default: .npm-audit-accept.json)
@@ -63,28 +64,99 @@ Create a `.npm-audit-accept.json` file in your project root to accept known vuln
 
 #### Configuration Fields
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `id` | Yes | The vulnerability ID from npm audit |
-| `reason` | Yes | Why this vulnerability is being accepted |
-| `acceptedBy` | Yes | Who accepted this vulnerability |
-| `acceptedAt` | Yes | When this vulnerability was accepted (ISO 8601) |
-| `expiresAt` | No | When this acceptance expires (ISO 8601). If expired, the vulnerability will cause a failure again. |
+| Field        | Required | Description                                                                                         |
+| ------------ | -------- | --------------------------------------------------------------------------------------------------- |
+| `id`         | Yes      | The vulnerability ID from npm audit                                                                 |
+| `reason`     | Yes      | Why this vulnerability is being accepted                                                            |
+| `acceptedBy` | Yes      | Who accepted this vulnerability                                                                     |
+| `acceptedAt` | Yes      | When this vulnerability was accepted (ISO 8601)                                                     |
+| `expiresAt`  | No       | When this acceptance expires (ISO 8601). If expired, the vulnerability will cause a failure again. |
 
-### CI/CD Integration
+## CI/CD Integration
 
-Add to your pipeline:
+The key benefit of this tool is that `npx` can download and run it directly from npm **before** installing your project dependencies. This protects against supply chain attacks by auditing the lock file before any potentially compromised packages are installed.
+
+### GitHub Actions
 
 ```yaml
-# GitHub Actions example
-- name: Install dependencies with audit
-  run: npx @ppoll/npm-audit
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Security audit (before install)
+        run: npx @ppoll/npm-audit
+
+      - name: Install dependencies
+        run: npm ci
 ```
 
+### Azure DevOps Pipelines
+
 ```yaml
-# Azure Pipelines example
-- script: npx @ppoll/npm-audit
-  displayName: 'Install dependencies with audit'
+trigger:
+  - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '20.x'
+    displayName: 'Install Node.js'
+
+  - script: npx @ppoll/npm-audit
+    displayName: 'Security audit (before install)'
+
+  - script: npm ci
+    displayName: 'Install dependencies'
+```
+
+#### With Custom Configuration
+
+```yaml
+steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '20.x'
+    displayName: 'Install Node.js'
+
+  - script: npx @ppoll/npm-audit --config security/audit-exceptions.json --level critical
+    displayName: 'Security audit (critical only)'
+
+  - script: npm ci
+    displayName: 'Install dependencies'
+```
+
+#### As a Separate Stage
+
+```yaml
+stages:
+  - stage: Security
+    displayName: 'Security Checks'
+    jobs:
+      - job: Audit
+        displayName: 'NPM Audit'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: NodeTool@0
+            inputs:
+              versionSpec: '20.x'
+
+          - script: npx @ppoll/npm-audit
+            displayName: 'Run security audit'
+            continueOnError: false
+
+          - script: npm ci
+            displayName: 'Install dependencies'
 ```
 
 ## Programmatic Usage
@@ -92,14 +164,69 @@ Add to your pipeline:
 ```typescript
 import { runAudit, loadConfig, filterVulnerabilities } from '@ppoll/npm-audit';
 
-const auditResult = await runAudit();
-const config = await loadConfig('.npm-audit-accept.json');
-const unacceptedVulnerabilities = filterVulnerabilities(auditResult, config);
+async function checkSecurity() {
+  const auditResult = await runAudit();
+  const config = await loadConfig('.npm-audit-accept.json');
+  const unacceptedVulnerabilities = filterVulnerabilities(auditResult, config);
 
-if (unacceptedVulnerabilities.length > 0) {
-  console.error('Unaccepted vulnerabilities found!');
-  process.exit(1);
+  if (unacceptedVulnerabilities.length > 0) {
+    console.error('Unaccepted vulnerabilities found!');
+    console.error(unacceptedVulnerabilities);
+    process.exit(1);
+  }
+
+  console.log('All clear!');
 }
+
+checkSecurity();
+```
+
+## Example Output
+
+When vulnerabilities are found:
+
+```
+🔍 Running npm audit...
+
+⚠️  Found vulnerabilities at high level or above.
+
+📋 Loading accepted vulnerabilities from .npm-audit-accept.json...
+
+❌ Found 2 unaccepted vulnerabilities:
+
+  HIGH: fast-xml-parser - fast-xml-parser has RangeError DoS Numeric Entities Bug
+    ID: 1112708
+    URL: https://github.com/advisories/GHSA-37qj-frw5-hhjh
+
+  HIGH: next - Next.js self-hosted applications vulnerable to DoS
+    ID: 1112593
+    URL: https://github.com/advisories/GHSA-9g9p-9gw9-jx7f
+
+To accept these vulnerabilities, add them to .npm-audit-accept.json:
+
+{
+  "acceptedVulnerabilities": [
+    {
+      "id": 1112708,
+      "reason": "TODO: Add reason for accepting",
+      "acceptedBy": "your-email@example.com",
+      "acceptedAt": "2026-02-09T09:21:06.871Z"
+    },
+    ...
+  ]
+}
+```
+
+When all vulnerabilities are accepted:
+
+```
+🔍 Running npm audit...
+
+⚠️  Found vulnerabilities at high level or above.
+
+📋 Loading accepted vulnerabilities from .npm-audit-accept.json...
+
+✅ All vulnerabilities are accepted in configuration.
 ```
 
 ## License

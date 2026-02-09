@@ -1,0 +1,22 @@
+# Source files
+src/
+
+# Tests
+**/*.test.ts
+coverage/
+jest.config.js
+
+# TypeScript config
+tsconfig.json
+
+# IDE
+.idea/
+.vscode/
+
+# Git
+.git/
+.gitignore
+
+# Misc
+*.log
+.DS_Store
