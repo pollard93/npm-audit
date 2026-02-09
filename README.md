@@ -1,27 +1,21 @@
 # @ppoll/npm-audit
 
-A CLI tool that runs `npm audit` and fails if there are any high or critical vulnerabilities, unless they are explicitly accepted in a configuration file. Designed for CI/CD pipelines to enforce security policies while allowing teams to acknowledge and track accepted risks.
+A zero-dependency CLI tool that runs `npm audit` and fails if there are any high or critical vulnerabilities, unless they are explicitly accepted in a configuration file. Designed for CI/CD pipelines to enforce security policies while allowing teams to acknowledge and track accepted risks.
 
-## Installation
+## Features
 
-```bash
-npm install -g @ppoll/npm-audit
-```
-
-Or as a dev dependency:
-
-```bash
-npm install --save-dev @ppoll/npm-audit
-```
+- **Zero dependencies** - Only uses Node.js built-in modules
+- **Supply chain protection** - Run before `npm install` to audit your lock file before any potentially compromised packages are installed
+- **Configurable severity levels** - Fail on high/critical (default) or adjust to your needs
+- **Accept known vulnerabilities** - Document accepted risks with reasons, ownership, and expiration dates
+- **CI/CD ready** - Works with GitHub Actions, Azure DevOps, and any CI system
 
 ## Usage
 
-### CLI
-
-Run the audit check:
+The recommended way to use this tool is with `npx`, which downloads and runs it directly without installing:
 
 ```bash
-npm-audit-check
+npx @ppoll/npm-audit
 ```
 
 This will:
@@ -34,7 +28,7 @@ This will:
 ### Options
 
 ```bash
-npm-audit-check [options]
+npx @ppoll/npm-audit [options]
 
 Options:
   --config, -c    Path to config file (default: .npm-audit-accept.json)
@@ -157,28 +151,6 @@ stages:
 
           - script: npm ci
             displayName: 'Install dependencies'
-```
-
-## Programmatic Usage
-
-```typescript
-import { runAudit, loadConfig, filterVulnerabilities } from '@ppoll/npm-audit';
-
-async function checkSecurity() {
-  const auditResult = await runAudit();
-  const config = await loadConfig('.npm-audit-accept.json');
-  const unacceptedVulnerabilities = filterVulnerabilities(auditResult, config);
-
-  if (unacceptedVulnerabilities.length > 0) {
-    console.error('Unaccepted vulnerabilities found!');
-    console.error(unacceptedVulnerabilities);
-    process.exit(1);
-  }
-
-  console.log('All clear!');
-}
-
-checkSecurity();
 ```
 
 ## Example Output
