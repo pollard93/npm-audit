@@ -1,5 +1,8 @@
 # @ppoll/npm-audit
 
+[![npm version](https://img.shields.io/npm/v/@ppoll/npm-audit.svg)](https://www.npmjs.com/package/@ppoll/npm-audit)
+[![npm downloads](https://img.shields.io/npm/dm/@ppoll/npm-audit.svg)](https://www.npmjs.com/package/@ppoll/npm-audit)
+
 A zero-dependency CLI tool that runs `npm audit` and fails if there are any high or critical vulnerabilities, unless they are explicitly accepted in a configuration file. Designed for CI/CD pipelines to enforce security policies while allowing teams to acknowledge and track accepted risks.
 
 ## Features

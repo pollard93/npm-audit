@@ -1,6 +1,6 @@
 {
   "name": "@ppoll/npm-audit",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Run npm audit and fail on high/critical vulnerabilities unless explicitly accepted",
   "bin": {
     "npm-audit": "lib/cli/cli.js"
@@ -15,7 +15,7 @@
     "lint:fix": "eslint src/ --fix",
     "format": "prettier --write src/",
     "format:check": "prettier --check src/",
-    "prepublishOnly": "npm run lint && npm run build && npm test"
+    "prepublishOnly": "npm run lint && npm run format:check && npm run build && npm test"
   },
   "keywords": [
     "npm",
@@ -51,7 +51,8 @@
     "typescript-eslint": "^8.54.0"
   },
   "files": [
-    "lib/**/*"
+    "lib/**/*",
+    ".npm-audit-accept.json.example"
   ],
   "engines": {
     "node": ">=18.0.0"

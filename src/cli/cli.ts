@@ -101,8 +101,8 @@ export async function main(): Promise<void> {
     console.log(`
 {
   "acceptedVulnerabilities": [
-${result.unacceptedVulnerabilities!
-  .map(
+${result
+  .unacceptedVulnerabilities!.map(
     (v) => `    {
       "id": ${v.id},
       "reason": "TODO: Add reason for accepting",
