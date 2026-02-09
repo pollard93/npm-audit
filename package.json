@@ -27,9 +27,10 @@
   ],
   "author": "ppoll",
   "license": "MIT",
+  "homepage": "https://github.com/pollard93/npm-audit",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ppoll/npm-audit.git"
+    "url": "https://github.com/pollard93/npm-audit.git"
   },
   "publishConfig": {
     "access": "public"
