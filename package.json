@@ -1,6 +1,6 @@
 {
   "name": "@ppoll/npm-audit",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Run npm audit and fail on high/critical vulnerabilities unless explicitly accepted",
   "bin": {
     "npm-audit": "lib/cli/cli.js"
@@ -51,8 +51,7 @@
     "typescript-eslint": "^8.54.0"
   },
   "files": [
-    "lib/**/*",
-    ".npm-audit-accept.json.example"
+    "lib/**/*"
   ],
   "engines": {
     "node": ">=18.0.0"
