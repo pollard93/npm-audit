@@ -1,11 +1,4 @@
-import { SeverityLevel, SEVERITY_ORDER } from '../../shared/types';
-
-/**
- * Check if a severity level meets the minimum threshold
- */
-export function meetsMinimumSeverity(severity: SeverityLevel, minSeverity: SeverityLevel): boolean {
-  return SEVERITY_ORDER[severity] >= SEVERITY_ORDER[minSeverity];
-}
+import { SeverityLevel } from '../../shared/types';
 
 // ANSI color codes
 const COLORS: Record<SeverityLevel, string> = {

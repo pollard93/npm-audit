@@ -1,27 +1,6 @@
-import { meetsMinimumSeverity, getSeverityColor, RESET_COLOR } from './severity';
+import { getSeverityColor, RESET_COLOR } from './severity';
 
 describe('severity', () => {
-  describe('meetsMinimumSeverity', () => {
-    it('should return true when severity equals minimum', () => {
-      expect(meetsMinimumSeverity('high', 'high')).toBe(true);
-    });
-
-    it('should return true when severity is above minimum', () => {
-      expect(meetsMinimumSeverity('critical', 'high')).toBe(true);
-      expect(meetsMinimumSeverity('high', 'moderate')).toBe(true);
-    });
-
-    it('should return false when severity is below minimum', () => {
-      expect(meetsMinimumSeverity('moderate', 'high')).toBe(false);
-      expect(meetsMinimumSeverity('low', 'moderate')).toBe(false);
-    });
-
-    it('should handle info level', () => {
-      expect(meetsMinimumSeverity('info', 'info')).toBe(true);
-      expect(meetsMinimumSeverity('info', 'low')).toBe(false);
-    });
-  });
-
   describe('getSeverityColor', () => {
     it('should return cyan for info', () => {
       expect(getSeverityColor('info')).toBe('\x1b[36m');
