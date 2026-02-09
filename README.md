@@ -18,7 +18,7 @@ A zero-dependency CLI tool that runs `npm audit` and fails if there are any high
 The recommended way to use this tool is with `npx`, which downloads and runs it directly without installing:
 
 ```bash
-npx @ppoll/npm-audit
+npx @ppoll/npm-audit@latest
 ```
 
 This will:
@@ -31,7 +31,7 @@ This will:
 ### Options
 
 ```bash
-npx @ppoll/npm-audit [options]
+npx @ppoll/npm-audit@latest [options]
 
 Options:
   --config, -c    Path to config file (default: .npm-audit-accept.json)
@@ -88,7 +88,7 @@ jobs:
           node-version: '20'
 
       - name: Security audit (before install)
-        run: npx @ppoll/npm-audit
+        run: npx @ppoll/npm-audit@latest
 
       - name: Install dependencies
         run: npm ci
@@ -109,7 +109,7 @@ steps:
       versionSpec: '20.x'
     displayName: 'Install Node.js'
 
-  - script: npx @ppoll/npm-audit
+  - script: npx @ppoll/npm-audit@latest
     displayName: 'Security audit (before install)'
 
   - script: npm ci
@@ -148,7 +148,7 @@ stages:
             inputs:
               versionSpec: '20.x'
 
-          - script: npx @ppoll/npm-audit
+          - script: npx @ppoll/npm-audit@latest
             displayName: 'Run security audit'
             continueOnError: false
 
