@@ -116,6 +116,9 @@ export async function main(): Promise<void> {
     );
     const uniqueVulns = deduplicateVulnerabilities(result.unacceptedVulnerabilities!);
 
+    const now = new Date();
+    const oneWeekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
     console.log(`
 {
   "acceptedVulnerabilities": [
@@ -123,9 +126,12 @@ ${uniqueVulns
   .map(
     (v) => `    {
       "id": ${v.id},
+      "description": ${JSON.stringify(v.title)},
+      "url": ${JSON.stringify(v.url)},
       "reason": "TODO: Add reason for accepting",
       "acceptedBy": "your-email@example.com",
-      "acceptedAt": "${new Date().toISOString()}"
+      "acceptedAt": "${now.toISOString()}",
+      "expiresAt": "${oneWeekFromNow.toISOString()}"
     }`
   )
   .join(',\n')}

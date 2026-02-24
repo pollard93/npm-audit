@@ -267,4 +267,40 @@ describe('filterVulnerabilities', () => {
     const result = filterVulnerabilities(auditResult, config);
     expect(result).toHaveLength(0);
   });
+
+  it('should resolve title and URL for transitive vulnerabilities', () => {
+    const auditResult = createMockAuditResult({
+      minimatch: createMockVulnerability({
+        name: 'minimatch',
+        severity: 'high',
+        via: [
+          {
+            source: 1113371,
+            name: 'minimatch',
+            dependency: 'minimatch',
+            title: 'ReDoS via repeated wildcards',
+            url: 'https://github.com/advisories/GHSA-1234',
+            severity: 'high',
+            range: '*',
+          },
+        ],
+      }),
+      '@eslint/config-array': createMockVulnerability({
+        name: '@eslint/config-array',
+        severity: 'high',
+        title: '',
+        url: '',
+        via: ['minimatch'],
+      }),
+    });
+
+    const config: AuditConfig = { acceptedVulnerabilities: [] };
+    const result = filterVulnerabilities(auditResult, config);
+
+    const transitiveResult = result.find((v) => v.name === '@eslint/config-array');
+    expect(transitiveResult).toBeDefined();
+    expect(transitiveResult!.id).toBe(1113371);
+    expect(transitiveResult!.title).toBe('ReDoS via repeated wildcards');
+    expect(transitiveResult!.url).toBe('https://github.com/advisories/GHSA-1234');
+  });
 });

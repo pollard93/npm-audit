@@ -1,6 +1,6 @@
 {
   "name": "@ppoll/npm-audit",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Run npm audit and fail on high/critical vulnerabilities unless explicitly accepted",
   "bin": {
     "npm-audit": "lib/cli/cli.js"

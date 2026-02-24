@@ -8,8 +8,8 @@ import {
 import { isExpired } from '../../config/utils/isExpired';
 import {
   resolveVulnerabilityIds,
-  getVulnerabilityTitle,
-  getVulnerabilityUrl,
+  resolveVulnerabilityTitle,
+  resolveVulnerabilityUrl,
 } from './extractVulnerabilityInfo';
 
 /**
@@ -50,8 +50,8 @@ export function filterVulnerabilities(
         id: firstUnacceptedId,
         name,
         severity: vulnerability.severity,
-        title: getVulnerabilityTitle(vulnerability),
-        url: getVulnerabilityUrl(vulnerability),
+        title: resolveVulnerabilityTitle(vulnerability, auditResult.vulnerabilities),
+        url: resolveVulnerabilityUrl(vulnerability, auditResult.vulnerabilities),
       });
     }
   }
