@@ -1,5 +1,5 @@
-import { checkAuditResult } from './cli';
-import { AuditResult, AuditConfig, Vulnerability } from '../shared/types';
+import { checkAuditResult, deduplicateVulnerabilities } from './cli';
+import { AuditResult, AuditConfig, Vulnerability, FilteredVulnerability } from '../shared/types';
 
 describe('checkAuditResult', () => {
   const createMockVulnerability = (overrides: Partial<Vulnerability> = {}): Vulnerability => ({
@@ -206,5 +206,60 @@ describe('checkAuditResult', () => {
     expect(result.exitCode).toBe(1);
     expect(result.message).toContain('unaccepted vulnerabilities');
     expect(result.unacceptedVulnerabilities).toHaveLength(1);
+  });
+});
+
+describe('deduplicateVulnerabilities', () => {
+  const makeVuln = (id: number, name = `pkg-${id}`): FilteredVulnerability => ({
+    id,
+    name,
+    severity: 'high',
+    title: `Vulnerability ${id}`,
+    url: `https://example.com/${id}`,
+  });
+
+  it('should return the same list when there are no duplicates', () => {
+    const vulns = [makeVuln(111), makeVuln(222), makeVuln(333)];
+    const result = deduplicateVulnerabilities(vulns);
+    expect(result).toHaveLength(3);
+    expect(result.map((v) => v.id)).toEqual([111, 222, 333]);
+  });
+
+  it('should remove duplicate IDs keeping only the first occurrence', () => {
+    const vulns = [
+      makeVuln(111, 'pkg-a'),
+      makeVuln(111, 'pkg-b'),
+      makeVuln(111, 'pkg-c'),
+      makeVuln(222, 'pkg-d'),
+    ];
+    const result = deduplicateVulnerabilities(vulns);
+    expect(result).toHaveLength(2);
+    expect(result[0].id).toBe(111);
+    expect(result[0].name).toBe('pkg-a'); // first occurrence is kept
+    expect(result[1].id).toBe(222);
+  });
+
+  it('should filter out entries with id 0', () => {
+    const vulns = [makeVuln(0, 'unresolvable-pkg'), makeVuln(111), makeVuln(222)];
+    const result = deduplicateVulnerabilities(vulns);
+    expect(result).toHaveLength(2);
+    expect(result.map((v) => v.id)).toEqual([111, 222]);
+  });
+
+  it('should filter out multiple entries with id 0', () => {
+    const vulns = [makeVuln(0, 'pkg-a'), makeVuln(0, 'pkg-b'), makeVuln(111)];
+    const result = deduplicateVulnerabilities(vulns);
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe(111);
+  });
+
+  it('should return empty array when all entries have id 0', () => {
+    const vulns = [makeVuln(0, 'pkg-a'), makeVuln(0, 'pkg-b')];
+    const result = deduplicateVulnerabilities(vulns);
+    expect(result).toHaveLength(0);
+  });
+
+  it('should return empty array for empty input', () => {
+    expect(deduplicateVulnerabilities([])).toHaveLength(0);
   });
 });

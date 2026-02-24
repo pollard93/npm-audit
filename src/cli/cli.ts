@@ -49,6 +49,22 @@ export function checkAuditResult(
   };
 }
 
+/**
+ * Deduplicate vulnerabilities by source ID for the suggested accept config.
+ * Filters out entries with id 0 (unresolvable) and keeps only the first
+ * occurrence of each unique ID.
+ */
+export function deduplicateVulnerabilities(
+  vulnerabilities: FilteredVulnerability[]
+): FilteredVulnerability[] {
+  const seenIds = new Set<number>();
+  return vulnerabilities.filter((v) => {
+    if (v.id === 0 || seenIds.has(v.id)) return false;
+    seenIds.add(v.id);
+    return true;
+  });
+}
+
 export async function main(): Promise<void> {
   const options = parseArgs(process.argv.slice(2));
 
@@ -98,11 +114,13 @@ export async function main(): Promise<void> {
     console.log(
       `To accept these vulnerabilities, add them to ${options.configPath || getDefaultConfigFilename()}:`
     );
+    const uniqueVulns = deduplicateVulnerabilities(result.unacceptedVulnerabilities!);
+
     console.log(`
 {
   "acceptedVulnerabilities": [
-${result
-  .unacceptedVulnerabilities!.map(
+${uniqueVulns
+  .map(
     (v) => `    {
       "id": ${v.id},
       "reason": "TODO: Add reason for accepting",
