@@ -7,7 +7,7 @@ import {
 } from '../../shared/types';
 import { isExpired } from '../../config/utils/isExpired';
 import {
-  extractVulnerabilityIds,
+  resolveVulnerabilityIds,
   getVulnerabilityTitle,
   getVulnerabilityUrl,
 } from './extractVulnerabilityInfo';
@@ -36,8 +36,8 @@ export function filterVulnerabilities(
       continue;
     }
 
-    // Get all vulnerability IDs for this package
-    const vulnIds = extractVulnerabilityIds(vulnerability);
+    // Get all vulnerability IDs for this package, resolving transitive references
+    const vulnIds = resolveVulnerabilityIds(vulnerability, auditResult.vulnerabilities);
 
     // Check if all vulnerabilities for this package are accepted
     const allAccepted = vulnIds.length > 0 && vulnIds.every((id) => acceptedIds.has(id));
