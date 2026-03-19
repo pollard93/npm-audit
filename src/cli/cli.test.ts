@@ -218,10 +218,18 @@ describe('deduplicateVulnerabilities', () => {
   });
 
   it('should return the same list when there are no duplicates', () => {
-    const vulns = [makeVuln('https://example.com/a'), makeVuln('https://example.com/b'), makeVuln('https://example.com/c')];
+    const vulns = [
+      makeVuln('https://example.com/a'),
+      makeVuln('https://example.com/b'),
+      makeVuln('https://example.com/c'),
+    ];
     const result = deduplicateVulnerabilities(vulns);
     expect(result).toHaveLength(3);
-    expect(result.map((v) => v.url)).toEqual(['https://example.com/a', 'https://example.com/b', 'https://example.com/c']);
+    expect(result.map((v) => v.url)).toEqual([
+      'https://example.com/a',
+      'https://example.com/b',
+      'https://example.com/c',
+    ]);
   });
 
   it('should remove duplicate URLs keeping only the first occurrence', () => {
@@ -239,7 +247,11 @@ describe('deduplicateVulnerabilities', () => {
   });
 
   it('should filter out entries with empty url', () => {
-    const vulns = [makeVuln('', 'unresolvable-pkg'), makeVuln('https://example.com/a'), makeVuln('https://example.com/b')];
+    const vulns = [
+      makeVuln('', 'unresolvable-pkg'),
+      makeVuln('https://example.com/a'),
+      makeVuln('https://example.com/b'),
+    ];
     const result = deduplicateVulnerabilities(vulns);
     expect(result).toHaveLength(2);
     expect(result.map((v) => v.url)).toEqual(['https://example.com/a', 'https://example.com/b']);
