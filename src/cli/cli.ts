@@ -57,10 +57,10 @@ export function checkAuditResult(
 export function deduplicateVulnerabilities(
   vulnerabilities: FilteredVulnerability[]
 ): FilteredVulnerability[] {
-  const seenIds = new Set<number>();
+  const seenUrls = new Set<string>();
   return vulnerabilities.filter((v) => {
-    if (v.id === 0 || seenIds.has(v.id)) return false;
-    seenIds.add(v.id);
+    if (!v.url || seenUrls.has(v.url)) return false;
+    seenUrls.add(v.url);
     return true;
   });
 }
@@ -125,9 +125,8 @@ export async function main(): Promise<void> {
 ${uniqueVulns
   .map(
     (v) => `    {
-      "id": ${v.id},
-      "description": ${JSON.stringify(v.title)},
       "url": ${JSON.stringify(v.url)},
+      "description": ${JSON.stringify(v.title)},
       "reason": "TODO: Add reason for accepting",
       "acceptedBy": "your-email@example.com",
       "acceptedAt": "${now.toISOString()}",

@@ -6,14 +6,11 @@ import {
   SEVERITY_ORDER,
 } from '../../shared/types';
 import { isExpired } from '../../config/utils/isExpired';
-import {
-  resolveVulnerabilityIds,
-  resolveVulnerabilityTitle,
-  resolveVulnerabilityUrl,
-} from './extractVulnerabilityInfo';
+import { resolveVulnerabilityDetails } from './extractVulnerabilityInfo';
 
 /**
- * Filter vulnerabilities based on severity level and accepted vulnerabilities
+ * Filter vulnerabilities based on severity level and accepted vulnerabilities.
+ * Returns one entry per unaccepted advisory URL.
  */
 export function filterVulnerabilities(
   auditResult: AuditResult,
@@ -24,9 +21,9 @@ export function filterVulnerabilities(
   const unaccepted: FilteredVulnerability[] = [];
   const minSeverityLevel = SEVERITY_ORDER[minSeverity];
 
-  // Get set of non-expired accepted vulnerability IDs
-  const acceptedIds = new Set(
-    config.acceptedVulnerabilities.filter((v) => !isExpired(v, now)).map((v) => v.id)
+  // Get set of non-expired accepted vulnerability URLs
+  const acceptedUrls = new Set(
+    config.acceptedVulnerabilities.filter((v) => !isExpired(v, now)).map((v) => v.url)
   );
 
   for (const [name, vulnerability] of Object.entries(auditResult.vulnerabilities)) {
@@ -36,23 +33,19 @@ export function filterVulnerabilities(
       continue;
     }
 
-    // Get all vulnerability IDs for this package, resolving transitive references
-    const vulnIds = resolveVulnerabilityIds(vulnerability, auditResult.vulnerabilities);
+    // Get all advisory details for this package, resolving transitive references
+    const details = resolveVulnerabilityDetails(vulnerability, auditResult.vulnerabilities);
 
-    // Check if all vulnerabilities for this package are accepted
-    const allAccepted = vulnIds.length > 0 && vulnIds.every((id) => acceptedIds.has(id));
-
-    if (!allAccepted) {
-      // Find the first unaccepted vulnerability ID for reporting
-      const firstUnacceptedId = vulnIds.find((id) => !acceptedIds.has(id)) || vulnIds[0] || 0;
-
-      unaccepted.push({
-        id: firstUnacceptedId,
-        name,
-        severity: vulnerability.severity,
-        title: resolveVulnerabilityTitle(vulnerability, auditResult.vulnerabilities),
-        url: resolveVulnerabilityUrl(vulnerability, auditResult.vulnerabilities),
-      });
+    // Report each unaccepted advisory
+    for (const detail of details) {
+      if (!acceptedUrls.has(detail.url)) {
+        unaccepted.push({
+          url: detail.url,
+          name,
+          severity: vulnerability.severity,
+          title: detail.title,
+        });
+      }
     }
   }
 

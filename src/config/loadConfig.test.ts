@@ -9,7 +9,7 @@ describe('loadConfig', () => {
 
     expect(config.acceptedVulnerabilities).toHaveLength(1);
     expect(config.acceptedVulnerabilities[0]).toEqual({
-      id: 1234567,
+      url: 'https://github.com/advisories/GHSA-xxxx-xxxx-xxxx',
       reason: 'No fix available, mitigated by input validation in our application',
       acceptedBy: 'engineer@example.com',
       acceptedAt: '2026-02-09T00:00:00.000Z',

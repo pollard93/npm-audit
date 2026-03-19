@@ -156,7 +156,7 @@ describe('checkAuditResult', () => {
     const config: AuditConfig = {
       acceptedVulnerabilities: [
         {
-          id: 123456,
+          url: 'https://npmjs.com/advisories/123456',
           reason: 'Mitigated by input validation',
           acceptedBy: 'security@example.com',
           acceptedAt: '2026-01-01T00:00:00.000Z',
@@ -192,7 +192,7 @@ describe('checkAuditResult', () => {
     const config: AuditConfig = {
       acceptedVulnerabilities: [
         {
-          id: 789012,
+          url: 'https://npmjs.com/advisories/789012',
           reason: 'Was accepted but now expired',
           acceptedBy: 'security@example.com',
           acceptedAt: '2025-01-01T00:00:00.000Z',
@@ -210,51 +210,50 @@ describe('checkAuditResult', () => {
 });
 
 describe('deduplicateVulnerabilities', () => {
-  const makeVuln = (id: number, name = `pkg-${id}`): FilteredVulnerability => ({
-    id,
+  const makeVuln = (url: string, name = `pkg-${url}`): FilteredVulnerability => ({
+    url,
     name,
     severity: 'high',
-    title: `Vulnerability ${id}`,
-    url: `https://example.com/${id}`,
+    title: `Vulnerability ${url}`,
   });
 
   it('should return the same list when there are no duplicates', () => {
-    const vulns = [makeVuln(111), makeVuln(222), makeVuln(333)];
+    const vulns = [makeVuln('https://example.com/a'), makeVuln('https://example.com/b'), makeVuln('https://example.com/c')];
     const result = deduplicateVulnerabilities(vulns);
     expect(result).toHaveLength(3);
-    expect(result.map((v) => v.id)).toEqual([111, 222, 333]);
+    expect(result.map((v) => v.url)).toEqual(['https://example.com/a', 'https://example.com/b', 'https://example.com/c']);
   });
 
-  it('should remove duplicate IDs keeping only the first occurrence', () => {
+  it('should remove duplicate URLs keeping only the first occurrence', () => {
     const vulns = [
-      makeVuln(111, 'pkg-a'),
-      makeVuln(111, 'pkg-b'),
-      makeVuln(111, 'pkg-c'),
-      makeVuln(222, 'pkg-d'),
+      makeVuln('https://example.com/a', 'pkg-a'),
+      makeVuln('https://example.com/a', 'pkg-b'),
+      makeVuln('https://example.com/a', 'pkg-c'),
+      makeVuln('https://example.com/b', 'pkg-d'),
     ];
     const result = deduplicateVulnerabilities(vulns);
     expect(result).toHaveLength(2);
-    expect(result[0].id).toBe(111);
-    expect(result[0].name).toBe('pkg-a'); // first occurrence is kept
-    expect(result[1].id).toBe(222);
+    expect(result[0].url).toBe('https://example.com/a');
+    expect(result[0].name).toBe('pkg-a');
+    expect(result[1].url).toBe('https://example.com/b');
   });
 
-  it('should filter out entries with id 0', () => {
-    const vulns = [makeVuln(0, 'unresolvable-pkg'), makeVuln(111), makeVuln(222)];
+  it('should filter out entries with empty url', () => {
+    const vulns = [makeVuln('', 'unresolvable-pkg'), makeVuln('https://example.com/a'), makeVuln('https://example.com/b')];
     const result = deduplicateVulnerabilities(vulns);
     expect(result).toHaveLength(2);
-    expect(result.map((v) => v.id)).toEqual([111, 222]);
+    expect(result.map((v) => v.url)).toEqual(['https://example.com/a', 'https://example.com/b']);
   });
 
-  it('should filter out multiple entries with id 0', () => {
-    const vulns = [makeVuln(0, 'pkg-a'), makeVuln(0, 'pkg-b'), makeVuln(111)];
+  it('should filter out multiple entries with empty url', () => {
+    const vulns = [makeVuln('', 'pkg-a'), makeVuln('', 'pkg-b'), makeVuln('https://example.com/a')];
     const result = deduplicateVulnerabilities(vulns);
     expect(result).toHaveLength(1);
-    expect(result[0].id).toBe(111);
+    expect(result[0].url).toBe('https://example.com/a');
   });
 
-  it('should return empty array when all entries have id 0', () => {
-    const vulns = [makeVuln(0, 'pkg-a'), makeVuln(0, 'pkg-b')];
+  it('should return empty array when all entries have empty url', () => {
+    const vulns = [makeVuln('', 'pkg-a'), makeVuln('', 'pkg-b')];
     const result = deduplicateVulnerabilities(vulns);
     expect(result).toHaveLength(0);
   });

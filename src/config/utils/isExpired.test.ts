@@ -3,7 +3,7 @@ import { AcceptedVulnerability } from '../../shared/types';
 
 describe('isExpired', () => {
   const createVulnerability = (expiresAt?: string): AcceptedVulnerability => ({
-    id: 123456,
+    url: 'https://github.com/advisories/GHSA-1234',
     reason: 'Test reason',
     acceptedBy: 'test@example.com',
     acceptedAt: '2026-01-01T00:00:00.000Z',

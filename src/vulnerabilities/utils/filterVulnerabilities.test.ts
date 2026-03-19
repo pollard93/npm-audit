@@ -74,7 +74,7 @@ describe('filterVulnerabilities', () => {
 
     expect(result).toHaveLength(1);
     expect(result[0].name).toBe('vulnerable-pkg');
-    expect(result[0].id).toBe(123456);
+    expect(result[0].url).toBe('https://npmjs.com/advisories/123456');
   });
 
   it('should filter out accepted vulnerabilities', () => {
@@ -99,7 +99,7 @@ describe('filterVulnerabilities', () => {
     const config: AuditConfig = {
       acceptedVulnerabilities: [
         {
-          id: 123456,
+          url: 'https://npmjs.com/advisories/123456',
           reason: 'Accepted for testing',
           acceptedBy: 'test@example.com',
           acceptedAt: '2026-02-09T00:00:00.000Z',
@@ -133,7 +133,7 @@ describe('filterVulnerabilities', () => {
     const config: AuditConfig = {
       acceptedVulnerabilities: [
         {
-          id: 123456,
+          url: 'https://npmjs.com/advisories/123456',
           reason: 'Accepted for testing',
           acceptedBy: 'test@example.com',
           acceptedAt: '2025-01-01T00:00:00.000Z',
@@ -206,7 +206,7 @@ describe('filterVulnerabilities', () => {
     const config: AuditConfig = {
       acceptedVulnerabilities: [
         {
-          id: 111,
+          url: 'https://npmjs.com/advisories/111',
           reason: 'Accepted for testing',
           acceptedBy: 'test@example.com',
           acceptedAt: '2026-02-09T00:00:00.000Z',
@@ -216,7 +216,7 @@ describe('filterVulnerabilities', () => {
 
     const result = filterVulnerabilities(auditResult, config);
     expect(result).toHaveLength(1);
-    expect(result[0].id).toBe(222);
+    expect(result[0].url).toBe('https://npmjs.com/advisories/222');
   });
 
   it('should filter package when all vulnerabilities are accepted', () => {
@@ -250,13 +250,13 @@ describe('filterVulnerabilities', () => {
     const config: AuditConfig = {
       acceptedVulnerabilities: [
         {
-          id: 111,
+          url: 'https://npmjs.com/advisories/111',
           reason: 'Accepted for testing',
           acceptedBy: 'test@example.com',
           acceptedAt: '2026-02-09T00:00:00.000Z',
         },
         {
-          id: 222,
+          url: 'https://npmjs.com/advisories/222',
           reason: 'Accepted for testing',
           acceptedBy: 'test@example.com',
           acceptedAt: '2026-02-09T00:00:00.000Z',
@@ -299,7 +299,6 @@ describe('filterVulnerabilities', () => {
 
     const transitiveResult = result.find((v) => v.name === '@eslint/config-array');
     expect(transitiveResult).toBeDefined();
-    expect(transitiveResult!.id).toBe(1113371);
     expect(transitiveResult!.title).toBe('ReDoS via repeated wildcards');
     expect(transitiveResult!.url).toBe('https://github.com/advisories/GHSA-1234');
   });

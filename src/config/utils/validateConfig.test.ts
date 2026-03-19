@@ -5,7 +5,7 @@ describe('validateConfig', () => {
     const config = {
       acceptedVulnerabilities: [
         {
-          id: 123456,
+          url: 'https://github.com/advisories/GHSA-1234',
           reason: 'Test reason',
           acceptedBy: 'test@example.com',
           acceptedAt: '2026-02-09T00:00:00.000Z',
@@ -33,7 +33,7 @@ describe('validateConfig', () => {
 
   it('should throw for invalid vulnerability entry', () => {
     const config = {
-      acceptedVulnerabilities: [{ id: 'not-a-number' }],
+      acceptedVulnerabilities: [{ url: '' }],
     };
 
     expect(() => validateConfig(config)).toThrow('Invalid accepted vulnerability');
@@ -43,7 +43,7 @@ describe('validateConfig', () => {
     const config = {
       acceptedVulnerabilities: [
         {
-          id: 123456,
+          url: 'https://github.com/advisories/GHSA-1234',
           reason: 'Test reason',
           acceptedBy: 'test@example.com',
           acceptedAt: '2026-02-09T00:00:00.000Z',

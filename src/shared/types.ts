@@ -45,7 +45,8 @@ export interface AuditResult {
 }
 
 export interface AcceptedVulnerability {
-  id: number;
+  url: string;
+  id?: number;
   reason: string;
   acceptedBy: string;
   acceptedAt: string;
@@ -57,11 +58,10 @@ export interface AuditConfig {
 }
 
 export interface FilteredVulnerability {
-  id: number;
+  url: string;
   name: string;
   severity: SeverityLevel;
   title: string;
-  url: string;
 }
 
 export interface AuditOptions {

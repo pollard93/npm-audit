@@ -49,7 +49,7 @@ Create a `.npm-audit-accept.json` file in your project root to accept known vuln
 {
   "acceptedVulnerabilities": [
     {
-      "id": 1234567,
+      "url": "https://github.com/advisories/GHSA-xxxx-xxxx-xxxx",
       "reason": "No fix available, mitigated by input validation",
       "acceptedBy": "engineer@example.com",
       "acceptedAt": "2026-02-09T00:00:00.000Z",
@@ -61,13 +61,44 @@ Create a `.npm-audit-accept.json` file in your project root to accept known vuln
 
 #### Configuration Fields
 
-| Field        | Required | Description                                                                                         |
-| ------------ | -------- | --------------------------------------------------------------------------------------------------- |
-| `id`         | Yes      | The vulnerability ID from npm audit                                                                 |
-| `reason`     | Yes      | Why this vulnerability is being accepted                                                            |
-| `acceptedBy` | Yes      | Who accepted this vulnerability                                                                     |
-| `acceptedAt` | Yes      | When this vulnerability was accepted (ISO 8601)                                                     |
-| `expiresAt`  | No       | When this acceptance expires (ISO 8601). If expired, the vulnerability will cause a failure again. |
+| Field        | Required | Description                                                                                                                                  |
+| ------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `url`        | Yes      | The GitHub advisory URL (e.g., `https://github.com/advisories/GHSA-xxxx-xxxx-xxxx`). Stable across npm audit runs, unlike vulnerability IDs. |
+| `id`         | No       | The vulnerability ID from npm audit. Deprecated (kept for reference, but not used for matching)                                             |
+| `reason`     | Yes      | Why this vulnerability is being accepted                                                                                                    |
+| `acceptedBy` | Yes      | Who accepted this vulnerability                                                                                                             |
+| `acceptedAt` | Yes      | When this vulnerability was accepted (ISO 8601)                                                                                             |
+| `expiresAt`  | No       | When this acceptance expires (ISO 8601). If expired, the vulnerability will cause a failure again.                                          |
+
+### Migrating from v1 to v2
+
+**v2.0.0 introduces a breaking change**: matching is now based on advisory URLs instead of vulnerability IDs.
+
+**Why?** npm audit's vulnerability IDs change between runs (same advisory different ID). Advisory URLs (GHSA-*) are stable.
+
+**Migration steps:**
+
+1. Run `npx @ppoll/npm-audit@latest` with your old config
+2. Copy the advisory URLs from the suggestion output
+3. Update `.npm-audit-accept.json` to use `url` as the key instead of `id`
+
+**Example:**
+
+```json
+{
+  "acceptedVulnerabilities": [
+    {
+      "url": "https://github.com/advisories/GHSA-7r86-cg39-jmmj",
+      "reason": "Investigating fix availability",
+      "acceptedBy": "security-team@example.com",
+      "acceptedAt": "2026-03-19T00:00:00.000Z",
+      "expiresAt": "2026-04-19T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+The `id` field is now optional and preserved for reference, but is no longer used for matching.
 
 ## CI/CD Integration
 
