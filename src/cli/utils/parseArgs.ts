@@ -1,8 +1,11 @@
-import { SeverityLevel, SEVERITY_ORDER } from '../../shared/types';
+import { PackageManager, SeverityLevel, SEVERITY_ORDER } from '../../shared/types';
+
+const PACKAGE_MANAGERS: PackageManager[] = ['npm', 'pnpm'];
 
 export interface CliOptions {
   configPath?: string;
   level: SeverityLevel;
+  packageManager?: PackageManager;
   help: boolean;
   version: boolean;
 }
@@ -34,6 +37,17 @@ export function parseArgs(args: string[]): CliOptions {
           process.exit(1);
         }
         options.level = level;
+        break;
+      }
+      case '--package-manager':
+      case '-p': {
+        const packageManager = args[++i] as PackageManager;
+        if (!PACKAGE_MANAGERS.includes(packageManager)) {
+          console.error(`Invalid package manager: ${packageManager}`);
+          console.error(`Valid options: ${PACKAGE_MANAGERS.join(', ')}`);
+          process.exit(1);
+        }
+        options.packageManager = packageManager;
         break;
       }
       case '--help':

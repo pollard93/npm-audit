@@ -1,47 +1,18 @@
 export type SeverityLevel = 'info' | 'low' | 'moderate' | 'high' | 'critical';
 
-export interface Vulnerability {
-  id: number;
-  name: string;
+export type PackageManager = 'npm' | 'pnpm';
+
+export interface NormalizedAdvisory {
+  packageName: string;
   severity: SeverityLevel;
   title: string;
   url: string;
-  range: string;
-  via: (string | VulnerabilityVia)[];
-  effects: string[];
-  fixAvailable: boolean | FixInfo;
-}
-
-export interface VulnerabilityVia {
-  source: number;
-  name: string;
-  dependency: string;
-  title: string;
-  url: string;
-  severity: SeverityLevel;
-  range: string;
-}
-
-export interface FixInfo {
-  name: string;
-  version: string;
-  isSemVerMajor: boolean;
 }
 
 export interface AuditResult {
-  auditReportVersion: number;
-  vulnerabilities: Record<string, Vulnerability>;
-  metadata: {
-    vulnerabilities: Record<SeverityLevel, number> & { total: number };
-    dependencies: {
-      prod: number;
-      dev: number;
-      optional: number;
-      peer: number;
-      peerOptional: number;
-      total: number;
-    };
-  };
+  packageManager: PackageManager;
+  advisories: NormalizedAdvisory[];
+  severityCounts: Record<SeverityLevel, number> & { total: number };
 }
 
 export interface AcceptedVulnerability {

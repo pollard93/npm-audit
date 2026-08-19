@@ -10,11 +10,13 @@ npm-audit-check - Check npm audit for vulnerabilities and fail on unaccepted iss
 Usage: npm-audit-check [options]
 
 Options:
-  --config, -c    Path to config file (default: ${getDefaultConfigFilename()})
-  --level, -l     Minimum severity level to fail on (default: high)
-                  Options: info, low, moderate, high, critical
-  --help, -h      Show this help message
-  --version, -v   Show version
+  --config, -c            Path to config file (default: ${getDefaultConfigFilename()})
+  --level, -l             Minimum severity level to fail on (default: high)
+                          Options: info, low, moderate, high, critical
+  --package-manager, -p   Package manager to audit with (default: auto-detected from lockfile)
+                          Options: npm, pnpm
+  --help, -h              Show this help message
+  --version, -v           Show version
 
 Configuration:
   Create a ${getDefaultConfigFilename()} file to accept known vulnerabilities:

@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.1.0] - 2026-08-19
+
+### Added
+
+- **pnpm support**: the package manager is now auto-detected from the lockfile (`pnpm-lock.yaml` or `package-lock.json`) in the current directory
+- New `--package-manager`/`-p` flag to force `npm` or `pnpm` when both lockfiles are present or none is found
+
+### Changed
+
+- Internal `AuditResult` type is now a manager-agnostic normalized shape (`{ packageManager, advisories, severityCounts }`) instead of npm's raw audit JSON schema. This is an internal refactor only — no change to the CLI's behavior or config format for existing npm users.
+
 ## [2.0.0] - 2026-03-19
 
 ### Breaking Changes

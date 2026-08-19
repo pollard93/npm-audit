@@ -7,10 +7,9 @@ export function hasVulnerabilitiesAtOrAbove(
   auditResult: AuditResult,
   minSeverity: SeverityLevel = 'high'
 ): boolean {
-  const metadata = auditResult.metadata.vulnerabilities;
   const minLevel = SEVERITY_ORDER[minSeverity];
 
-  for (const [severity, count] of Object.entries(metadata)) {
+  for (const [severity, count] of Object.entries(auditResult.severityCounts)) {
     if (severity === 'total') continue;
 
     const level = SEVERITY_ORDER[severity as SeverityLevel];

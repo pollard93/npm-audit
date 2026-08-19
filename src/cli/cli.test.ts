@@ -1,64 +1,37 @@
 import { checkAuditResult, deduplicateVulnerabilities } from './cli';
-import { AuditResult, AuditConfig, Vulnerability, FilteredVulnerability } from '../shared/types';
+import {
+  AuditResult,
+  AuditConfig,
+  NormalizedAdvisory,
+  FilteredVulnerability,
+} from '../shared/types';
 
 describe('checkAuditResult', () => {
-  const createMockVulnerability = (overrides: Partial<Vulnerability> = {}): Vulnerability => ({
-    id: 1,
-    name: 'test-package',
+  const createMockAdvisory = (overrides: Partial<NormalizedAdvisory> = {}): NormalizedAdvisory => ({
+    packageName: 'test-package',
     severity: 'high',
     title: 'Test vulnerability',
     url: 'https://npmjs.com/advisories/123456',
-    range: '*',
-    via: [
-      {
-        source: 123456,
-        name: 'test-package',
-        dependency: 'test-package',
-        title: 'Test vulnerability',
-        url: 'https://npmjs.com/advisories/123456',
-        severity: 'high',
-        range: '*',
-      },
-    ],
-    effects: [],
-    fixAvailable: false,
     ...overrides,
   });
 
-  const createMockAuditResult = (
-    vulnerabilities: Record<string, Partial<Vulnerability>> = {},
-    counts?: { high?: number; critical?: number; moderate?: number; low?: number }
-  ): AuditResult => ({
-    auditReportVersion: 2,
-    vulnerabilities: vulnerabilities as Record<string, Vulnerability>,
-    metadata: {
-      vulnerabilities: {
-        info: 0,
-        low: counts?.low ?? 0,
-        moderate: counts?.moderate ?? 0,
-        high:
-          counts?.high ??
-          Object.values(vulnerabilities).filter((v) => v.severity === 'high').length,
-        critical:
-          counts?.critical ??
-          Object.values(vulnerabilities).filter((v) => v.severity === 'critical').length,
-        total: Object.keys(vulnerabilities).length,
-      },
-      dependencies: {
-        prod: 10,
-        dev: 5,
-        optional: 0,
-        peer: 0,
-        peerOptional: 0,
-        total: 15,
-      },
+  const createMockAuditResult = (advisories: NormalizedAdvisory[] = []): AuditResult => ({
+    packageManager: 'npm',
+    advisories,
+    severityCounts: {
+      info: 0,
+      low: advisories.filter((a) => a.severity === 'low').length,
+      moderate: advisories.filter((a) => a.severity === 'moderate').length,
+      high: advisories.filter((a) => a.severity === 'high').length,
+      critical: advisories.filter((a) => a.severity === 'critical').length,
+      total: advisories.length,
     },
   });
 
   const emptyConfig: AuditConfig = { acceptedVulnerabilities: [] };
 
   it('should return exitCode 0 when no vulnerabilities are found', () => {
-    const auditResult = createMockAuditResult({});
+    const auditResult = createMockAuditResult([]);
 
     const result = checkAuditResult(auditResult, emptyConfig, 'high');
 
@@ -67,12 +40,9 @@ describe('checkAuditResult', () => {
   });
 
   it('should detect high severity vulnerabilities by default', () => {
-    const auditResult = createMockAuditResult({
-      'vulnerable-pkg': createMockVulnerability({
-        name: 'vulnerable-pkg',
-        severity: 'high',
-      }),
-    });
+    const auditResult = createMockAuditResult([
+      createMockAdvisory({ packageName: 'vulnerable-pkg', severity: 'high' }),
+    ]);
 
     const result = checkAuditResult(auditResult, emptyConfig, 'high');
 
@@ -82,23 +52,14 @@ describe('checkAuditResult', () => {
   });
 
   it('should detect critical severity vulnerabilities', () => {
-    const auditResult = createMockAuditResult({
-      'critical-pkg': createMockVulnerability({
-        name: 'critical-pkg',
+    const auditResult = createMockAuditResult([
+      createMockAdvisory({
+        packageName: 'critical-pkg',
         severity: 'critical',
-        via: [
-          {
-            source: 999999,
-            name: 'critical-pkg',
-            dependency: 'critical-pkg',
-            title: 'Critical issue',
-            url: 'https://npmjs.com/advisories/999999',
-            severity: 'critical',
-            range: '*',
-          },
-        ],
+        title: 'Critical issue',
+        url: 'https://npmjs.com/advisories/999999',
       }),
-    });
+    ]);
 
     const result = checkAuditResult(auditResult, emptyConfig, 'high');
 
@@ -107,26 +68,14 @@ describe('checkAuditResult', () => {
   });
 
   it('should detect low severity vulnerabilities when level is low', () => {
-    const auditResult = createMockAuditResult(
-      {
-        'low-pkg': createMockVulnerability({
-          name: 'low-pkg',
-          severity: 'low',
-          via: [
-            {
-              source: 111111,
-              name: 'low-pkg',
-              dependency: 'low-pkg',
-              title: 'Low severity issue',
-              url: 'https://npmjs.com/advisories/111111',
-              severity: 'low',
-              range: '*',
-            },
-          ],
-        }),
-      },
-      { low: 1 }
-    );
+    const auditResult = createMockAuditResult([
+      createMockAdvisory({
+        packageName: 'low-pkg',
+        severity: 'low',
+        title: 'Low severity issue',
+        url: 'https://npmjs.com/advisories/111111',
+      }),
+    ]);
 
     const result = checkAuditResult(auditResult, emptyConfig, 'low');
 
@@ -135,23 +84,13 @@ describe('checkAuditResult', () => {
   });
 
   it('should allow vulnerability when accepted in config', () => {
-    const auditResult = createMockAuditResult({
-      'accepted-pkg': createMockVulnerability({
-        name: 'accepted-pkg',
-        severity: 'high',
-        via: [
-          {
-            source: 123456,
-            name: 'accepted-pkg',
-            dependency: 'accepted-pkg',
-            title: 'Accepted issue',
-            url: 'https://npmjs.com/advisories/123456',
-            severity: 'high',
-            range: '*',
-          },
-        ],
+    const auditResult = createMockAuditResult([
+      createMockAdvisory({
+        packageName: 'accepted-pkg',
+        title: 'Accepted issue',
+        url: 'https://npmjs.com/advisories/123456',
       }),
-    });
+    ]);
 
     const config: AuditConfig = {
       acceptedVulnerabilities: [
@@ -171,23 +110,13 @@ describe('checkAuditResult', () => {
   });
 
   it('should fail when accepted vulnerability has expired', () => {
-    const auditResult = createMockAuditResult({
-      'expired-pkg': createMockVulnerability({
-        name: 'expired-pkg',
-        severity: 'high',
-        via: [
-          {
-            source: 789012,
-            name: 'expired-pkg',
-            dependency: 'expired-pkg',
-            title: 'Expired acceptance',
-            url: 'https://npmjs.com/advisories/789012',
-            severity: 'high',
-            range: '*',
-          },
-        ],
+    const auditResult = createMockAuditResult([
+      createMockAdvisory({
+        packageName: 'expired-pkg',
+        title: 'Expired acceptance',
+        url: 'https://npmjs.com/advisories/789012',
       }),
-    });
+    ]);
 
     const config: AuditConfig = {
       acceptedVulnerabilities: [

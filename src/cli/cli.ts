@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { runAudit } from '../audit/runAudit';
+import { detectPackageManager } from '../audit/detectPackageManager';
 import { filterVulnerabilities } from '../vulnerabilities/utils/filterVulnerabilities';
 import { hasVulnerabilitiesAtOrAbove } from '../vulnerabilities/utils/hasVulnerabilitiesAtOrAbove';
 import { loadConfig } from '../config/loadConfig';
@@ -78,10 +79,11 @@ export async function main(): Promise<void> {
     process.exit(0);
   }
 
-  console.log('🔍 Running npm audit...\n');
-
   try {
-    const auditResult = await runAudit();
+    const packageManager = options.packageManager ?? detectPackageManager();
+    console.log(`🔍 Running ${packageManager} audit...\n`);
+
+    const auditResult = await runAudit(process.cwd(), packageManager);
 
     // Quick check if there are any vulnerabilities at the specified level
     if (!hasVulnerabilitiesAtOrAbove(auditResult, options.level)) {

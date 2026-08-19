@@ -1,29 +1,23 @@
-import { execSync } from 'child_process';
-import { AuditResult } from '../shared/types';
-import { parseAuditOutput } from './utils/parseAuditOutput';
+import { AuditResult, PackageManager } from '../shared/types';
+import { detectPackageManager } from './detectPackageManager';
+import { runNpmAudit } from './npm/runNpmAudit';
+import { parseNpmAuditOutput } from './npm/parseNpmAuditOutput';
+import { runPnpmAudit } from './pnpm/runPnpmAudit';
+import { parsePnpmAuditOutput } from './pnpm/parsePnpmAuditOutput';
 
 /**
- * Run npm audit and return the parsed result
+ * Run the audit for the given (or detected) package manager and return the normalized result
  */
-export async function runAudit(cwd: string = process.cwd()): Promise<AuditResult> {
-  try {
-    // npm audit returns non-zero exit code when vulnerabilities are found,
-    // so we need to capture the output regardless of exit code
-    const output = execSync('npm audit --json', {
-      cwd,
-      encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
+export async function runAudit(
+  cwd: string = process.cwd(),
+  packageManager?: PackageManager
+): Promise<AuditResult> {
+  const resolvedPackageManager = packageManager ?? detectPackageManager(cwd);
 
-    return parseAuditOutput(output);
-  } catch (error) {
-    // npm audit returns non-zero when vulnerabilities exist
-    const execError = error as { stdout?: string; stderr?: string; message?: string };
-
-    if (execError.stdout) {
-      return parseAuditOutput(execError.stdout);
-    }
-
-    throw new Error(`Failed to run npm audit: ${execError.message || 'Unknown error'}`);
+  switch (resolvedPackageManager) {
+    case 'npm':
+      return parseNpmAuditOutput(await runNpmAudit(cwd));
+    case 'pnpm':
+      return parsePnpmAuditOutput(await runPnpmAudit(cwd));
   }
 }

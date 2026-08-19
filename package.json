@@ -1,7 +1,7 @@
 {
   "name": "@ppoll/npm-audit",
-  "version": "2.0.0",
-  "description": "Run npm audit and fail on high/critical vulnerabilities unless explicitly accepted",
+  "version": "2.1.0",
+  "description": "Run npm or pnpm audit and fail on high/critical vulnerabilities unless explicitly accepted",
   "bin": {
     "npm-audit": "lib/cli/cli.js"
   },
@@ -19,6 +19,7 @@
   },
   "keywords": [
     "npm",
+    "pnpm",
     "audit",
     "security",
     "vulnerabilities",

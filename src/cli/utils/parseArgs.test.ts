@@ -8,6 +8,31 @@ describe('parseArgs', () => {
     expect(options.help).toBe(false);
     expect(options.version).toBe(false);
     expect(options.configPath).toBeUndefined();
+    expect(options.packageManager).toBeUndefined();
+  });
+
+  it('should parse --package-manager option', () => {
+    const options = parseArgs(['--package-manager', 'pnpm']);
+    expect(options.packageManager).toBe('pnpm');
+  });
+
+  it('should parse -p short option', () => {
+    const options = parseArgs(['-p', 'npm']);
+    expect(options.packageManager).toBe('npm');
+  });
+
+  it('should exit on invalid package manager', () => {
+    const mockExit = jest.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('process.exit called');
+    });
+    const mockConsoleError = jest.spyOn(console, 'error').mockImplementation();
+
+    expect(() => parseArgs(['--package-manager', 'yarn'])).toThrow('process.exit called');
+
+    expect(mockConsoleError).toHaveBeenCalledWith('Invalid package manager: yarn');
+
+    mockExit.mockRestore();
+    mockConsoleError.mockRestore();
   });
 
   it('should parse --config option', () => {

@@ -12,6 +12,7 @@ describe('showHelp', () => {
     expect(helpText).toContain('npm-audit-check');
     expect(helpText).toContain('--config');
     expect(helpText).toContain('--level');
+    expect(helpText).toContain('--package-manager');
     expect(helpText).toContain('--help');
     expect(helpText).toContain('--version');
     expect(helpText).toContain('.npm-audit-accept.json');
